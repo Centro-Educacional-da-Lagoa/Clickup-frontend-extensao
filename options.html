@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>ClickUp - Configurações</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 24px;
+        max-width: 600px;
+        margin: 0 auto;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 32px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        color: #7b68ee;
+        font-size: 28px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 32px;
+      }
+
+      /* OAuth Section */
+      .oauth-section {
+        border: 2px solid #7b68ee;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: linear-gradient(
+          135deg,
+          rgba(123, 104, 238, 0.05) 0%,
+          rgba(123, 104, 238, 0.1) 100%
+        );
+      }
+      .oauth-section h3 {
+        margin: 0 0 10px 0;
+        color: #7b68ee;
+        font-size: 18px;
+      }
+      .oauth-section p {
+        margin: 0 0 15px 0;
+        font-size: 13px;
+        color: #666;
+      }
+      .oauth-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #7b68ee 0%, #6a5acd 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .oauth-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(123, 104, 238, 0.4);
+      }
+      .oauth-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .user-info {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+        display: none;
+      }
+      .user-info.show {
+        display: block;
+      }
+      .user-info strong {
+        color: #155724;
+      }
+      .logout-btn {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .logout-btn:hover {
+        background: #c82333;
+      }
+
+      /* Divider */
+      .divider {
+        text-align: center;
+        margin: 30px 0;
+        color: #999;
+        position: relative;
+        font-size: 13px;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 42%;
+        height: 1px;
+        background: #ddd;
+      }
+      .divider::before {
+        left: 0;
+      }
+      .divider::after {
+        right: 0;
+      }
+
+      /* Manual Section */
+      .manual-section {
+        opacity: 0.7;
+        transition: opacity 0.3s;
+      }
+      .manual-section:hover {
+        opacity: 1;
+      }
+      .manual-section h3 {
+        margin: 0 0 10px 0;
+        color: #666;
+        font-size: 18px;
+      }
+      .manual-section p {
+        margin: 0 0 15px 0;
+        font-size: 13px;
+        color: #666;
+      }
+
+      label {
+        display: block;
+        margin-top: 15px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-top: 8px;
+        transition: border-color 0.2s;
+      }
+      input[type="password"]:focus {
+        outline: none;
+        border-color: #7b68ee;
+      }
+      button.manual-save {
+        margin-top: 15px;
+        padding: 12px 24px;
+        cursor: pointer;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 600;
+        width: 100%;
+        transition: background 0.2s;
+      }
+      button.manual-save:hover {
+        background: #218838;
+      }
+      .info-box {
+        background: #e8f4fd;
+        border-left: 4px solid #2196f3;
+        padding: 12px 16px;
+        margin-top: 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #333;
+      }
+      .info-box a {
+        color: #2196f3;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .info-box a:hover {
+        text-decoration: underline;
+      }
+      #msg {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+        font-weight: 600;
+        display: none;
+      }
+      #msg.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+      #msg.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>ClickUp - Autenticação</h1>
+      <p class="subtitle">Escolha como deseja se conectar ao ClickUp</p>
+
+      <!-- OAuth Section -->
+      <div class="oauth-section">
+        <h3>Login conta do Google</h3>
+        <p>Autentique-se com apenas um clique usando OAuth</p>
+        <button id="oauthBtn" class="oauth-btn">
+          <img
+            src="google.png"
+            alt="Google"
+            style="width: 20px; height: 20px"
+          />
+          Fazer Login com o Google
+        </button>
+
+        <div id="userInfo" class="user-info">
+          <strong>✅ Conectado como:</strong> <span id="userName"></span><br />
+          <button id="logoutBtn" class="logout-btn">🚪 Sair</button>
+        </div>
+      </div>
+
+      <div class="divider"><b>ou</b></div>
+
+      <!-- Manual Token Section -->
+      <div class="manual-section">
+        <h3>Configuração Manual</h3>
+        <p>Para usuários que preferem gerar seus próprios Token da API</p>
+
+        <label>Token da API do ClickUp</label>
+        <input id="token" type="password" placeholder="pk_xxxxx..." />
+        <div class="info-box">
+          📝 <strong>Como obter o token:</strong><br />
+          1. Acesse
+          <a href="https://app.clickup.com/settings/apps" target="_blank"
+            >https://app.clickup.com/settings/apps</a
+          ><br />
+          2. Clique em "Generate" ou "Regenerate"<br />
+          3. Copie o token e cole acima
+        </div>
+
+        <button id="save" class="manual-save">💾 Salvar Token Manual</button>
+      </div>
+
+      <p id="msg"></p>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

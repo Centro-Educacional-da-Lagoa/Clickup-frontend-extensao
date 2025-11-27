@@ -1,0 +1,38 @@
+{
+  "name": "ClickUp",
+  "description": "Migra tarefas em 'complete' para 'fechado'",
+  "version": "1.2.0",
+  "manifest_version": 3,
+"key": "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCf9YcIfrJZVP+kxNEuchvlySbI7FlQiOa4jH80EB6jcKn1sGirtrqidCOJ9SNBAgXxDR+WejdvgIkL2nE5X7ZkA+UMVRZe+xJJPV807Hb3/dpx9KRb4WjEPZPNKh484Vfer5YF34XbeIexTDdoXCm+cJCrxammZy7wuLqrveCLDsVQtAcYG9dr9OTpWT38olI7yFYXv8oAFL2Ucbn1UPYAmSZgwh6bXxJ6yPjKMjjPtTl6cBXm7t34WH/Vxb4q4oAgsVaRGZ3oS4Bfq7fJ7/SpYhNFeLicyRtlDSCiptReVvXj/kdtFLoUrJaw2dkdFkffEP8k8pGl+56elt3uinX1AgMBAAECggEACPV+N48AYQmmRihM2VJZoXwrldog+CZWxR7UsAniwWovEWbs5zMqjwHnYf5uwqEWS/Ayz6GEPH9BOGlRaUfPphiOv1WpAARau5Xk9h30CC3kX84L15E6JjBBuIkOR6rNBQNQvn73Vw8QNdwBiBuOA0/NgTARW/56+KS2tdBCb4n7UZNB6aBHLG4YmXqzarZlmHS8FTutPN/o/PYN8gwcwNu8DumBdaK9bFrTCLLuXADq+JG52yoE2PYhRiMkPhyR9EdI9/wI4OjlTTPj99pU21jAef0tEzekzEt/usWOdSEn2rT0dVfsoPi88AqpIEbkyNItrt3KZQxYv18dpWgK4QKBgQDQvi1NwU8anzn+9wyxs39GY/NrUBU7DdOoMI+BqcFzHmPxQrogWDmmxWH8gM/GGNPlHcdYpU88/vIJCtQVURTcFdZFSga4k5KboT71RU9teTvh6Zm+64+Gwy7EkHn4/3E6KVM1w8DqJSE3pNfqeQkcXraQSAeqPX6vw9U+xje+lQKBgQDELA5M/R6Ml6LmBch18FrEdYW7aKbD48ofPSNZferUzjE29I1x8JQ4znmtwmvdgJgui1m1HBwzq3gUxcnxb7INdXuilNf12L1RsypPrgQ3xcDhEqoTfMkhJBsX00r/z3epVoqOkanU1i83llxL81q88VK7XmAVjI1KYLzX0R/h4QKBgQDHKXxOIK9ZxivukUZCUfGQdpLsg6cOBh447cQuQYo6TPesXC7751FyRgc8hKY46r1ZcDUf5fGZT+IcMIGzqP3PEuKyj3OkLeEGri1ElRG4cKBq5pfzagsx2A5KK1LE+OvOQ1mKBbCNdkmgLp53r2267L8hICh4DF5QUvemAjdzlQKBgA3VxZRsbZEgyJ5MXhzjPKOKXkofUVOTZxfY6ftPxBYKDLKBgNA+VVXEShSVF6JhhVoS/dqmBt8mAqwEXv+mDvqgBH4s3SY7iO6QIjXIYgfE7JtzA4eoT08FCtwdTLbJ3PiWX+M6Jq4aBO54rj21Bfs5UcphF4mthfFu7SKTXxpBAoGBAJ3t+L5XUp4R5im5BycmE1bIkfgRM3jv4JeRD5OMBR4nxIslx4S5YMTTTkqFtZto9xXOF2ODicxh2hEppAJiFvAY6duOTUNhIQ0HsRA20yvOzGX+o0IRljt3KRV/VUtb1253Izmcbja5N8SuiOsDA7yHQMGaVYkaiC93hv7C23UU",
+"permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "https://api.clickup.com/*",
+    "https://app.clickup.com/*",
+    "http://localhost:3000/*"
+  ],
+  "background": { "service_worker": "service_worker.js" },
+
+  "action": {
+    "default_title": "ClickUp Manager",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://app.clickup.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}
