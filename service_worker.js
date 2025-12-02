@@ -94,6 +94,11 @@ async function getSpaceStatuses(token, spaceId) {
   const url = `${API_BASE}/space/${spaceId}`;
   const data = await fetchJSON(url, token);
 
+  console.log(
+    `[ClickUp Ext] Estrutura de status do space ${spaceId}:`,
+    JSON.stringify(data.statuses, null, 2)
+  );
+
   // A API retorna { statuses: [{ statuses: [...] }] }
   const statusGroups = data.statuses || [];
   const allStatuses = [];
@@ -101,13 +106,20 @@ async function getSpaceStatuses(token, spaceId) {
   statusGroups.forEach((group) => {
     if (group.statuses && Array.isArray(group.statuses)) {
       group.statuses.forEach((status) => {
-        if (status.status) {
-          allStatuses.push(status.status);
+        // Pode ser status.status ou apenas status (string)
+        const statusName =
+          typeof status === "string" ? status : status.status || status.name;
+        if (statusName) {
+          allStatuses.push(statusName);
         }
       });
     }
   });
 
+  console.log(
+    `[ClickUp Ext] Status extraídos do space ${spaceId}:`,
+    allStatuses
+  );
   return allStatuses;
 }
 
@@ -127,6 +139,86 @@ async function getFolderLists(token, folderId) {
   const url = `${API_BASE}/folder/${folderId}/list?archived=false`;
   const data = await fetchJSON(url, token);
   return data.lists || [];
+}
+
+// Função para extrair status de uma lista
+async function getListStatuses(token, listId) {
+  try {
+    const url = `${API_BASE}/list/${listId}`;
+    const data = await fetchJSON(url, token);
+
+    const statuses = [];
+    if (data.statuses && Array.isArray(data.statuses)) {
+      data.statuses.forEach((status) => {
+        const statusName =
+          typeof status === "string" ? status : status.status || status.name;
+        if (statusName) {
+          statuses.push(statusName);
+        }
+      });
+    }
+
+    return statuses;
+  } catch (err) {
+    console.warn(
+      `[ClickUp Ext] Erro ao buscar status da lista ${listId}:`,
+      err
+    );
+    return [];
+  }
+}
+
+// Função para buscar TODOS os status disponíveis no workspace
+async function getAllStatusesFromWorkspace(token, teamId) {
+  const allStatuses = new Set();
+
+  try {
+    console.log("[ClickUp Ext] Iniciando busca completa de status...");
+
+    // Buscar todos os spaces
+    const spaces = await getSpaces(token, teamId);
+    console.log(`[ClickUp Ext] ${spaces.length} space(s) encontrado(s)`);
+
+    for (const space of spaces) {
+      console.log(`[ClickUp Ext] Processando space: ${space.name}`);
+
+      // Buscar listas diretas do space
+      const spaceLists = await getSpaceLists(token, space.id);
+      console.log(
+        `[ClickUp Ext] ${spaceLists.length} lista(s) no space ${space.name}`
+      );
+
+      for (const list of spaceLists) {
+        const listStatuses = await getListStatuses(token, list.id);
+        listStatuses.forEach((status) => allStatuses.add(status));
+        await sleep(100);
+      }
+
+      // Buscar folders e suas listas
+      const folders = await getFolders(token, space.id);
+      console.log(
+        `[ClickUp Ext] ${folders.length} folder(s) no space ${space.name}`
+      );
+
+      for (const folder of folders) {
+        const folderLists = await getFolderLists(token, folder.id);
+        console.log(
+          `[ClickUp Ext] ${folderLists.length} lista(s) no folder ${folder.name}`
+        );
+
+        for (const list of folderLists) {
+          const listStatuses = await getListStatuses(token, list.id);
+          listStatuses.forEach((status) => allStatuses.add(status));
+          await sleep(100);
+        }
+      }
+    }
+
+    return Array.from(allStatuses).sort();
+  } catch (err) {
+    console.error("[ClickUp Ext] Erro ao buscar status do workspace:", err);
+    return [];
+  }
 }
 
 // Nova função: buscar tarefas por status no team inteiro
@@ -652,6 +744,68 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg && msg.type === "SCAN_TASKS") {
     const assigneeFilter = msg.assigneeFilter || null;
     scanTasks(assigneeFilter).then(sendResponse);
+    return true;
+  }
+  if (msg && msg.type === "GET_ALL_STATUSES") {
+    (async () => {
+      const cfg = await getCfg();
+      const token = cfg[STORAGE_KEYS.token];
+      const teamId = msg.teamId || (cfg[STORAGE_KEYS.teamId] || "").trim();
+
+      console.log("[ClickUp Ext] GET_ALL_STATUSES - Team ID:", teamId);
+
+      if (!token) {
+        return {
+          success: false,
+          message: "Token ausente. Configure em Opções.",
+          statuses: [],
+        };
+      }
+
+      if (!teamId) {
+        return {
+          success: false,
+          message: "Team ID não configurado",
+          statuses: [],
+        };
+      }
+
+      try {
+        // Buscar TODAS as tarefas do workspace (sem filtro de assignee)
+        console.log(
+          "[ClickUp Ext] Buscando todas as tarefas do workspace para extrair status..."
+        );
+        const allTasks = await getAllTasksInTeam(token, teamId, null);
+
+        // Extrair status únicos de todas as tarefas
+        const statusSet = new Set();
+        allTasks.forEach((task) => {
+          const status = task.status?.status || task.status;
+          if (status) {
+            statusSet.add(status);
+          }
+        });
+
+        const allStatuses = Array.from(statusSet).sort();
+        console.log(
+          `[ClickUp Ext] Total de ${allStatuses.length} status únicos encontrados:`,
+          allStatuses
+        );
+
+        return {
+          success: true,
+          message: `${allStatuses.length} status encontrado(s)`,
+          statuses: allStatuses,
+        };
+      } catch (e) {
+        console.error("[ClickUp Ext] Erro ao buscar status:", e);
+        return {
+          success: false,
+          message: String(e.message || e),
+          statuses: [],
+        };
+      }
+    })().then(sendResponse);
     return true;
   }
   if (msg && msg.type === "SCAN_ALL_TASKS") {

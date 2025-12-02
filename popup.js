@@ -290,12 +290,64 @@ function loadTasks() {
 
       // Usar status das tarefas já carregadas (mais rápido)
       buildStatusFilters();
+
+      // Carregar todos os status disponíveis no workspace para o dropdown de alteração
+      loadAllStatuses();
+
       applyFilters();
     }
   );
 }
 
-// Função removida - não é mais necessária carregar status separadamente
+// Função para carregar TODOS os status disponíveis no workspace
+function loadAllStatuses() {
+  if (!currentTeamId) {
+    console.warn("[Popup] Team ID não está definido");
+    return;
+  }
+
+  console.log("[Popup] Carregando TODOS os status disponíveis no workspace...");
+
+  chrome.runtime.sendMessage(
+    {
+      type: "GET_ALL_STATUSES",
+      teamId: currentTeamId,
+    },
+    (resp) => {
+      console.log("[Popup] Resposta GET_ALL_STATUSES:", resp);
+
+      if (resp && resp.success && resp.statuses && resp.statuses.length > 0) {
+        const allStatuses = resp.statuses;
+
+        // Obter referência atualizada do elemento
+        const targetSelect = document.getElementById("targetStatusSelect");
+
+        if (!targetSelect) {
+          console.error("[Popup] targetStatusSelect não encontrado!");
+          return;
+        }
+
+        // Atualizar dropdown de alteração com TODOS os status
+        targetSelect.innerHTML =
+          '<option value="">Selecione um status...</option>';
+
+        allStatuses.forEach((status) => {
+          const option = document.createElement("option");
+          option.value = status;
+          option.textContent = status;
+          targetSelect.appendChild(option);
+        });
+
+        console.log(
+          `[Popup] ${allStatuses.length} status disponíveis no workspace:`,
+          allStatuses
+        );
+      } else {
+        console.warn("[Popup] Nenhum status retornado ou erro:", resp);
+      }
+    }
+  );
+}
 
 function buildStatusFilters() {
   const statuses = [...new Set(allTasks.map((task) => task.status))].sort();
@@ -314,32 +366,17 @@ function buildStatusFilters() {
 
   statusFilters.value = "all";
 
-  // Dropdown de ALTERAÇÃO: Mesmos status (simplificado)
-  targetStatusSelect.innerHTML =
-    '<option value="">Selecione um status...</option>';
-
-  statuses.forEach((status) => {
-    const option = document.createElement("option");
-    option.value = status;
-    option.textContent = status;
-    targetStatusSelect.appendChild(option);
-  });
-
-  console.log(`[Popup] ${statuses.length} status disponíveis:`, statuses);
+  console.log(
+    `[Popup] ${statuses.length} status nas tarefas atuais:`,
+    statuses
+  );
 
   // Remover listeners antigos recriando os elementos
   const newStatusFilters = statusFilters.cloneNode(true);
   statusFilters.parentNode.replaceChild(newStatusFilters, statusFilters);
 
-  const newTargetStatusSelect = targetStatusSelect.cloneNode(true);
-  targetStatusSelect.parentNode.replaceChild(
-    newTargetStatusSelect,
-    targetStatusSelect
-  );
-
   // Reatribuir referências
   window.statusFilters = document.getElementById("statusFilters");
-  window.targetStatusSelect = document.getElementById("targetStatusSelect");
 
   // Adicionar listeners
   window.statusFilters.addEventListener("change", () => {
@@ -349,11 +386,6 @@ function buildStatusFilters() {
     }
     applyFilters();
   });
-
-  window.targetStatusSelect.addEventListener(
-    "change",
-    updateChangeStatusButton
-  );
 }
 
 function applyFilters() {
@@ -569,6 +601,10 @@ deselectAllBtn.addEventListener("click", () => {
 
 searchInput.addEventListener("input", () => {
   applyFilters();
+});
+
+targetStatusSelect.addEventListener("change", () => {
+  updateChangeStatusButton();
 });
 
 changeStatusBtn.addEventListener("click", () => {
